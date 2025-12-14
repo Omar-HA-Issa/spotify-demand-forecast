@@ -1,25 +1,53 @@
-# AWS Credentials 
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+*.ipynb_checkpoints/
+
+# dbt
+spotify_demand_forecast/target/
+spotify_demand_forecast/dbt_packages/
+spotify_demand_forecast/logs/
+*.log
+
+# AWS Credentials
+*.csv
 *.pem
 *.key
+.aws/
 credentials.txt
 config.ini
 
-# dbt profiles 
+# dbt profiles
 profiles.yml
+
+# dbt placeholder files
+.gitkeep
 
 # Data files
 data/*.csv
 data/*.parquet
 data/*.json
 
-# dbt specific
-target/
-dbt_packages/
-logs/
-
 # Model files
-*.pt
-*.pth
-*.pkl
 models/*.pt
 models/*.pth
+*.pkl
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
+
+# Environment variables
+.env
+.env.local
