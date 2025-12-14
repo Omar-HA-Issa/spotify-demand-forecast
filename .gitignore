@@ -1,5 +1,6 @@
 # Python
 venv/
+.venv/
 __pycache__/
 *.pyc
 *.pyo
@@ -13,9 +14,12 @@ spotify_demand_forecast/dbt_packages/
 spotify_demand_forecast/logs/
 *.log
 
-# AWS Credentials
-*.csv
+# Sensitive
+config.py
+.env
 *.pem
+
+# AWS Credentials
 *.key
 .aws/
 credentials.txt
@@ -24,13 +28,10 @@ config.ini
 # dbt profiles
 profiles.yml
 
-# dbt placeholder files
-.gitkeep
-
-# Data files
-data/*.csv
-data/*.parquet
-data/*.json
+# Data
+data/
+*.csv
+*.parquet
 
 # Model files
 models/*.pt
