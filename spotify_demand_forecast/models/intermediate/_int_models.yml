@@ -1,0 +1,124 @@
+version: 2
+
+models:
+  - name: int_streams_lag_features
+    description: |
+      Intermediate model adding lag features to streaming data.
+      Creates lagged versions of streams, playlist_adds, and popularity
+      at 1, 7, 14, and 30 day intervals for time series forecasting.
+    columns:
+      - name: stream_key
+        description: Surrogate key from staging
+        tests:
+          - unique
+          - not_null
+      - name: date
+        tests:
+          - not_null
+      - name: track_id
+        tests:
+          - not_null
+      - name: streams_lag_1d
+        description: Stream count from 1 day ago
+      - name: streams_lag_7d
+        description: Stream count from 7 days ago
+      - name: streams_lag_14d
+        description: Stream count from 14 days ago
+      - name: streams_lag_30d
+        description: Stream count from 30 days ago
+
+  - name: int_streams_rolling_features
+    description: |
+      Intermediate model adding rolling window statistics.
+      Calculates rolling averages, standard deviations, and sums
+      over 7, 14, and 30 day windows for trend detection.
+    columns:
+      - name: stream_key
+        tests:
+          - unique
+          - not_null
+      - name: streams_rolling_avg_7d
+        description: 7-day rolling average of streams
+      - name: streams_rolling_avg_14d
+        description: 14-day rolling average of streams
+      - name: streams_rolling_avg_30d
+        description: 30-day rolling average of streams
+      - name: streams_rolling_std_7d
+        description: 7-day rolling standard deviation (volatility)
+      - name: streams_rolling_std_14d
+        description: 14-day rolling standard deviation
+      - name: streams_rolling_std_30d
+        description: 30-day rolling standard deviation
+
+  - name: int_streams_temporal_features
+    description: |
+      Intermediate model adding calendar-based temporal features.
+      Extracts day of week, month, quarter, and seasonal indicators
+      to capture cyclical patterns in streaming behavior.
+    columns:
+      - name: stream_key
+        tests:
+          - unique
+          - not_null
+      - name: day_of_week
+        description: Day of week (0=Sunday through 6=Saturday)
+        tests:
+          - accepted_values:
+              values: [0, 1, 2, 3, 4, 5, 6]
+      - name: month
+        description: Month number (1-12)
+        tests:
+          - accepted_values:
+              values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+      - name: quarter
+        description: Quarter number (1-4)
+        tests:
+          - accepted_values:
+              values: [1, 2, 3, 4]
+      - name: is_weekend
+        description: Binary flag for weekend days
+        tests:
+          - accepted_values:
+              values: [0, 1]
+
+  - name: int_streams_change_features
+    description: |
+      Intermediate model adding period-over-period change calculations.
+      Computes day-over-day, week-over-week, and month-over-month changes
+      plus momentum indicators for trend strength assessment.
+    columns:
+      - name: stream_key
+        tests:
+          - unique
+          - not_null
+      - name: streams_change_dod
+        description: Absolute day-over-day change in streams
+      - name: streams_change_wow
+        description: Absolute week-over-week change in streams
+      - name: streams_change_mom
+        description: Absolute month-over-month change in streams
+      - name: streams_pct_change_dod
+        description: Percentage day-over-day change
+      - name: streams_momentum_7d
+        description: Short-term momentum (7d avg / 14d avg)
+      - name: streams_momentum_14d
+        description: Medium-term momentum (14d avg / 30d avg)
+
+  - name: int_region_aggregations
+    description: |
+      Intermediate model adding regional context metrics.
+      Calculates regional totals, averages, and market share
+      to provide competitive context for each track.
+    columns:
+      - name: stream_key
+        tests:
+          - unique
+          - not_null
+      - name: region_total_streams
+        description: Total streams in the region for this date
+      - name: region_avg_streams
+        description: Average streams per track in the region
+      - name: track_market_share
+        description: Track's share of total regional streams (0-1)
+      - name: track_vs_region_avg
+        description: Ratio of track streams to regional average

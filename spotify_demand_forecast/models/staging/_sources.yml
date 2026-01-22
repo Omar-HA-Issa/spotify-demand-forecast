@@ -1,0 +1,44 @@
+version: 2
+
+sources:
+  - name: raw
+    description: Raw Spotify streaming data loaded from S3 to Redshift
+    database: "{{ env_var('DBT_REDSHIFT_DATABASE', 'dev') }}"
+    schema: raw
+    tables:
+      - name: spotify_streams
+        description: |
+          Raw streaming data containing daily stream counts per track and region.
+          Data is synthetic, generated for ML model training purposes.
+          ~1.8M rows: 365 days x 1000 tracks x 5 regions
+        columns:
+          - name: date
+            description: Date of the streaming record (YYYY-MM-DD)
+            tests:
+              - not_null
+          - name: track_id
+            description: Unique identifier for the track
+            tests:
+              - not_null
+          - name: track_name
+            description: Name of the track
+          - name: artists
+            description: Artist(s) of the track
+          - name: streams
+            description: Number of streams on this date
+            tests:
+              - not_null
+          - name: region
+            description: Geographic region (US, EU, ASIA, LATAM, OTHER)
+            tests:
+              - not_null
+              - accepted_values:
+                  values: ['US', 'EU', 'ASIA', 'LATAM', 'OTHER']
+          - name: playlist_adds
+            description: Number of playlist additions on this date
+          - name: popularity
+            description: Track popularity score (0-100)
+        freshness:
+          warn_after: {count: 2, period: day}
+          error_after: {count: 7, period: day}
+        loaded_at_field: date

@@ -1,0 +1,155 @@
+version: 2
+
+models:
+  - name: mart_ml_features
+    description: |
+      Final ML-ready feature table for PyTorch GRU time-series forecasting.
+
+      Contains 43+ engineered features combining:
+      - Lag features (streams, playlist_adds, popularity at various intervals)
+      - Rolling statistics (averages, standard deviations, sums)
+      - Temporal features (day of week, month, seasonality indicators)
+      - Change/momentum features (DoD, WoW, MoM changes and trend strength)
+      - Regional context (market share, relative performance)
+
+      **Warmup Period:** First 30 days excluded to ensure all features have data.
+
+      **Target Variable:** `target_streams` - next day's stream count (what GRU predicts)
+
+      **Expected Row Count:** ~1.65M rows (365 - 30 warmup - 1 for target) x 1000 tracks x 5 regions
+
+    columns:
+      # Primary Keys
+      - name: stream_key
+        description: Unique identifier combining date, track_id, and region
+        tests:
+          - unique
+          - not_null
+
+      - name: date
+        description: Date of the record
+        tests:
+          - not_null
+
+      - name: track_id
+        description: Unique track identifier
+        tests:
+          - not_null
+
+      - name: region
+        description: Geographic region code
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['US', 'GB', 'DE', 'BR', 'JP']
+
+      # Current Metrics
+      - name: streams
+        description: Current day stream count
+        tests:
+          - not_null
+
+      - name: playlist_adds
+        description: Current day playlist additions
+
+      - name: popularity
+        description: Current popularity score (0-100)
+
+      # Lag Features
+      - name: streams_lag_1d
+        description: Streams from 1 day ago
+      - name: streams_lag_7d
+        description: Streams from 7 days ago
+      - name: streams_lag_14d
+        description: Streams from 14 days ago
+      - name: streams_lag_30d
+        description: Streams from 30 days ago
+      - name: playlist_adds_lag_1d
+        description: Playlist adds from 1 day ago
+      - name: playlist_adds_lag_7d
+        description: Playlist adds from 7 days ago
+      - name: popularity_lag_1d
+        description: Popularity from 1 day ago
+      - name: popularity_lag_7d
+        description: Popularity from 7 days ago
+
+      # Rolling Statistics
+      - name: streams_rolling_avg_7d
+        description: 7-day rolling average of streams
+      - name: streams_rolling_avg_14d
+        description: 14-day rolling average of streams
+      - name: streams_rolling_avg_30d
+        description: 30-day rolling average of streams
+      - name: streams_rolling_std_7d
+        description: 7-day rolling standard deviation (volatility)
+      - name: streams_rolling_std_14d
+        description: 14-day rolling standard deviation
+      - name: streams_rolling_std_30d
+        description: 30-day rolling standard deviation
+      - name: streams_rolling_sum_7d
+        description: 7-day rolling sum of streams
+      - name: streams_rolling_sum_14d
+        description: 14-day rolling sum of streams
+      - name: streams_rolling_sum_30d
+        description: 30-day rolling sum of streams
+
+      # Temporal Features
+      - name: day_of_week
+        description: Day of week (0=Sunday, 6=Saturday)
+        tests:
+          - accepted_values:
+              values: [0, 1, 2, 3, 4, 5, 6]
+      - name: day_of_month
+        description: Day of month (1-31)
+      - name: month
+        description: Month (1-12)
+      - name: quarter
+        description: Quarter (1-4)
+      - name: week_of_year
+        description: Week of year (1-53)
+      - name: is_weekend
+        description: Weekend indicator (0/1)
+      - name: is_month_start
+        description: First day of month indicator (0/1)
+      - name: is_month_end
+        description: Last day of month indicator (0/1)
+      - name: is_summer
+        description: Summer months indicator (June-August)
+      - name: is_holiday_season
+        description: Holiday season indicator (November-December)
+
+      # Change Features
+      - name: streams_change_dod
+        description: Absolute day-over-day stream change
+      - name: streams_change_wow
+        description: Absolute week-over-week stream change
+      - name: streams_change_mom
+        description: Absolute month-over-month stream change
+      - name: streams_pct_change_dod
+        description: Percentage day-over-day change
+      - name: streams_pct_change_wow
+        description: Percentage week-over-week change
+      - name: streams_pct_change_mom
+        description: Percentage month-over-month change
+      - name: streams_momentum_7d
+        description: Short-term momentum (7d avg / 14d avg ratio)
+      - name: streams_momentum_14d
+        description: Medium-term momentum (14d avg / 30d avg ratio)
+      - name: streams_volatility_ratio
+        description: Recent vs long-term volatility ratio
+
+      # Regional Context
+      - name: region_total_streams
+        description: Total streams in region for this date
+      - name: region_avg_streams
+        description: Average streams per track in region
+      - name: track_market_share
+        description: Track's share of regional streams (0-1)
+      - name: track_vs_region_avg
+        description: Ratio of track streams to regional average
+
+      # Target Variable
+      - name: target_streams
+        description: Next day's stream count (prediction target for GRU)
+        tests:
+          - not_null

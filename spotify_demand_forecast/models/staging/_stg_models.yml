@@ -1,0 +1,49 @@
+version: 2
+
+models:
+  - name: stg_spotify_streams
+    description: |
+      Cleaned and typed staging model for Spotify streaming data.
+      Adds a surrogate key and ensures consistent data types.
+    columns:
+      - name: stream_key
+        description: Surrogate key combining date, track_id, and region
+        tests:
+          - unique
+          - not_null
+      - name: date
+        description: Date of the streaming record
+        tests:
+          - not_null
+      - name: track_id
+        description: Unique identifier for the track
+        tests:
+          - not_null
+      - name: track_name
+        description: Name of the track
+      - name: artists
+        description: Artist(s) of the track
+      - name: streams
+        description: Number of streams (cast to integer)
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              config:
+                severity: warn
+      - name: region
+        description: Geographic region code
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['US', 'GB', 'DE', 'BR', 'JP']
+      - name: playlist_adds
+        description: Number of playlist additions (cast to integer)
+      - name: popularity
+        description: Track popularity score (0-100)
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 100
+              config:
+                severity: warn

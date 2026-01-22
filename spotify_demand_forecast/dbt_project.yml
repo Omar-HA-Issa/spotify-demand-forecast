@@ -1,7 +1,5 @@
 
-# Name your project! Project names should contain only lowercase characters
-# and underscores. A good package name should reflect your organization's
-# name or the intended use of these models
+# Spotify Demand Forecast - dbt Project Configuration
 name: 'spotify_demand_forecast'
 version: '1.0.0'
 
@@ -9,8 +7,6 @@ version: '1.0.0'
 profile: 'spotify_demand_forecast'
 
 # These configurations specify where dbt should look for different types of files.
-# The `model-paths` config, for example, states that models in this project can be
-# found in the "models/" directory. You probably won't need to change these!
 model-paths: ["models"]
 analysis-paths: ["analyses"]
 test-paths: ["tests"]
@@ -18,19 +14,40 @@ seed-paths: ["seeds"]
 macro-paths: ["macros"]
 snapshot-paths: ["snapshots"]
 
-clean-targets:         # directories to be removed by `dbt clean`
+clean-targets:
   - "target"
   - "dbt_packages"
 
+# Variables for feature engineering
+vars:
+  # Lag periods for time series features
+  lag_periods: [1, 7, 14, 30]
+  # Rolling window sizes
+  rolling_windows: [7, 14, 30]
+  # Minimum date for feature calculation (warmup period)
+  warmup_days: 30
 
-# Configuring models
-# Full documentation: https://docs.getdbt.com/docs/configuring-models
-
-# In this example config, we tell dbt to build all models in the example/
-# directory as views. These settings can be overridden in the individual model
-# files using the `{{ config(...) }}` macro.
+# Model configurations by layer
 models:
   spotify_demand_forecast:
-    # Config indicated by + and applies to all files under models/example/
-    example:
+    # Staging layer: lightweight views for data cleaning
+    staging:
       +materialized: view
+      +schema: staging
+
+    # Intermediate layer: feature engineering tables
+    intermediate:
+      +materialized: table
+      +schema: intermediate
+      # Redshift-specific optimizations
+      +dist: auto
+      +sort: ['date', 'track_id']
+
+    # Mart layer: final ML-ready features
+    mart:
+      +materialized: incremental
+      +schema: mart
+      +unique_key: stream_key
+      +incremental_strategy: delete+insert
+      +dist: auto
+      +sort: ['date', 'track_id', 'region']
